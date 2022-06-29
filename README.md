@@ -1,6 +1,6 @@
 # Boosting R-CNN: Reweighting R-CNN Samples by RPN’s Error for Underwater Object Detection
 
-This repository contains the code (in PyTorch) for the paper: 
+This repository contains the code (in PyTorch) for the paper: ([arxiv: 2206.13728](http://arxiv.org/abs/2206.13728))
 
 ## Introduction
 
