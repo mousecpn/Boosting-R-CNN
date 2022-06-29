@@ -29,7 +29,7 @@ After downloading all datasets, create UTDAC2020 document.
 
 ```
 $ cd data
-$ mkdir S-UODAC2020
+$ mkdir UTDAC2020
 ```
 
 It is recommended to symlink the dataset root to `$data`.
