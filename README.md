@@ -75,6 +75,13 @@ $ python tools/train.py configs/boosting_rcnn/boosting_rcnn_r50_pafpn_1x_voc.py
 $ python tools/test.py configs/boosting_rcnn/boosting_rcnn_r50_pafpn_1x_utdac.py <path/to/checkpoints>
 ```
 
+## Checkpoint
+
+**UTDAC2020**: https://drive.google.com/file/d/1p5SQe0opW1CbCjUsRHlBfANBXdoJ_kOs/view?usp=sharing
+
+**COCO**: https://drive.google.com/file/d/1uuE7GJvmY1pxW6okFgsX_khkYBy6PfB2/view?usp=sharing
+
+
 ## Results
 ![qualitative results](https://user-images.githubusercontent.com/46233799/175853981-828f55f8-d868-4524-ab8a-cc24ab92ec05.png)
 
