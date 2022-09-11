@@ -23,7 +23,7 @@ model = dict(
         num_outs=5),
     rpn_head=dict(
         _delete_=True,
-        type='ATSSRPNHead',
+        type='RetinaRPNHead',
         in_channels=256,
         feat_channels=256,
         stacked_convs=4,
@@ -235,7 +235,6 @@ data = dict(
         ann_file=data_root + 'annotations/image_info_test-dev2017.json',
         img_prefix=data_root + 'test2017/',
         pipeline=test_pipeline))
-evaluation = dict(interval=1, metric='bbox')
 
 # optimizer
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)

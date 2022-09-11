@@ -24,8 +24,6 @@ from .standard_roi_head import StandardRoIHead
 from .trident_roi_head import TridentRoIHead
 from .tr_head import TrHead, Dynamic_TrHead
 from .paa_roi_head import PAARoIHead
-from .boosting_roi_head import BoostingRoIHead
-from .bagging_roi_head import BaggingRoIHead
 from .prob_roi_head import ProbRoIHead,DyProbRoIHead,BoostRoIHead
 __all__ = [
     'BaseRoIHead', 'CascadeRoIHead', 'DoubleHeadRoIHead', 'MaskScoringRoIHead',

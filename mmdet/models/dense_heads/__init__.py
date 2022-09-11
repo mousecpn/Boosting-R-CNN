@@ -38,10 +38,7 @@ from .yolox_head import YOLOXHead
 from .paa_rpn_head import PAARPNHead
 from .cascade_paa_head import CascadePAAHead,StageCascadePAAHead
 from .cascade_head import StageCascadeDenseHead
-from .atss_rpn_head import ATSSRPNHead
-from .cascade_atss_rpn_head import CascadeATSSRPNHead
-from .RetinaRPN_plus import RetinaRPN
-from .gfl_rpn_head import GFLRPNHead
+from .Retina_rpn_head import RetinaRPNHead
 __all__ = [
     'AnchorFreeHead', 'AnchorHead', 'GuidedAnchorHead', 'FeatureAdaption',
     'RPNHead', 'GARPNHead', 'RetinaHead', 'RetinaSepBNHead', 'GARetinaHead',
