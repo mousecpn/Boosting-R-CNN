@@ -13,7 +13,7 @@ from .mask_heads import (CoarseMaskHead, FCNMaskHead, FeatureRelayHead,
                          HTCMaskHead, MaskIoUHead, MaskPointHead,
                          SCNetMaskHead, SCNetSemanticHead)
 from .mask_scoring_roi_head import MaskScoringRoIHead
-from .pisa_roi_head import PISARoIHead,ProbPISARoIHead
+from .pisa_roi_head import PISARoIHead
 from .point_rend_roi_head import PointRendRoIHead
 from .roi_extractors import (BaseRoIExtractor, GenericRoIExtractor,
                              SingleRoIExtractor)
