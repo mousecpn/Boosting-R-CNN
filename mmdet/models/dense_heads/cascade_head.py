@@ -13,7 +13,7 @@ import torch.nn as nn
 from mmcv.ops import DeformConv2d, batched_nms
 import copy
 from mmdet.core.bbox.iou_calculators import bbox_overlaps
-from .paa_rpn_head import levels_to_images
+from .paa_head import levels_to_images
 EPS = 1e-12
 try:
     import sklearn.mixture as skm
