@@ -16,9 +16,7 @@ from mmdet.core.bbox.iou_calculators import bbox_overlaps
 class ConvFCBBoxHead(BBoxHead):
     r"""More general bbox head, with shared conv and fc layers and two optional
     separated branches.
-
     .. code-block:: none
-
                                     /-> cls convs -> cls fcs -> cls
         shared convs -> shared fcs
                                     \-> reg convs -> reg fcs -> reg
@@ -119,7 +117,6 @@ class ConvFCBBoxHead(BBoxHead):
                             in_channels,
                             is_shared=False):
         """Add shared or separable branch.
-
         convs -> avg pool (optional) -> fcs
         """
         last_layer_dim = in_channels
@@ -226,3 +223,229 @@ class Shared4Conv1FCBBoxHead(ConvFCBBoxHead):
             *args,
             **kwargs)
 
+
+@HEADS.register_module()
+class ProbShared2FCBBoxHead(ConvFCBBoxHead):
+
+    def __init__(self, fc_out_channels=1024, *args, **kwargs):
+        super(ProbShared2FCBBoxHead, self).__init__(
+            num_shared_convs=0,
+            num_shared_fcs=2,
+            num_cls_convs=0,
+            num_cls_fcs=0,
+            num_reg_convs=0,
+            num_reg_fcs=0,
+            fc_out_channels=fc_out_channels,
+            *args,
+            **kwargs)
+
+    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
+    def get_bboxes(self,
+                   rois,
+                   cls_score,
+                   bbox_pred,
+                   img_shape,
+                   scale_factor,
+                   rescale=False,
+                   cfg=None):
+        # if self.custom_cls_channels:
+        #     scores = self.loss_cls.get_activation(cls_score)
+        # else:
+        #     scores = F.softmax(
+        #         cls_score, dim=-1) if cls_score is not None else None
+        scores = cls_score
+        # bbox_pred would be None in some detector when with_reg is False,
+        # e.g. Grid R-CNN.
+        if bbox_pred is not None:
+            bboxes = self.bbox_coder.decode(
+                rois[..., 1:], bbox_pred, max_shape=img_shape)
+        else:
+            bboxes = rois[:, 1:].clone()
+            if img_shape is not None:
+                bboxes[:, [0, 2]].clamp_(min=0, max=img_shape[1])
+                bboxes[:, [1, 3]].clamp_(min=0, max=img_shape[0])
+
+        if rescale and bboxes.size(0) > 0:
+            scale_factor = bboxes.new_tensor(scale_factor)
+            bboxes = (bboxes.view(bboxes.size(0), -1, 4) / scale_factor).view(
+                bboxes.size()[0], -1)
+
+        if cfg is None:
+            return bboxes, scores
+        else:
+            det_bboxes, det_labels = multiclass_nms(bboxes, scores,
+                                                    cfg.score_thr, cfg.nms,
+                                                    cfg.max_per_img)
+
+            return det_bboxes, det_labels
+
+
+@HEADS.register_module()
+class ProbConvFCBBoxHead(ConvFCBBoxHead):
+
+    def __init__(self, fc_out_channels=1024, focal_reg=False, gamma=1, *args, **kwargs):
+        super(ProbConvFCBBoxHead, self).__init__(
+            fc_out_channels=fc_out_channels,
+            *args,
+            **kwargs)
+        self.focal_reg = focal_reg
+        self.gamma = gamma
+
+    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
+    def get_bboxes(self,
+                   rois,
+                   cls_score,
+                   bbox_pred,
+                   img_shape,
+                   scale_factor,
+                   rescale=False,
+                   cfg=None):
+        # if self.custom_cls_channels:
+        #     scores = self.loss_cls.get_activation(cls_score)
+        # else:
+        #     scores = F.softmax(
+        #         cls_score, dim=-1) if cls_score is not None else None
+        scores = cls_score
+        if bbox_pred is not None:
+            bboxes = self.bbox_coder.decode(
+                rois[..., 1:], bbox_pred, max_shape=img_shape)
+        else:
+            bboxes = rois[:, 1:].clone()
+            if img_shape is not None:
+                bboxes[:, [0, 2]].clamp_(min=0, max=img_shape[1])
+                bboxes[:, [1, 3]].clamp_(min=0, max=img_shape[0])
+
+        if rescale and bboxes.size(0) > 0:
+            scale_factor = bboxes.new_tensor(scale_factor)
+            bboxes = (bboxes.view(bboxes.size(0), -1, 4) / scale_factor).view(
+                bboxes.size()[0], -1)
+
+        if cfg is None:
+            return bboxes, scores
+        else:
+            det_bboxes, det_labels = multiclass_nms(bboxes, scores,
+                                                    cfg.score_thr, cfg.nms,
+                                                    cfg.max_per_img)
+
+            return det_bboxes, det_labels
+
+    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
+    def loss(self,
+             cls_score,
+             bbox_pred,
+             rois,
+             labels,
+             label_weights,
+             bbox_targets,
+             bbox_weights,
+             reduction_override=None):
+        losses = dict()
+        if bbox_pred is not None:
+            bg_class_ind = self.num_classes
+            # 0~self.num_classes-1 are FG, self.num_classes is BG
+            pos_inds = (labels >= 0) & (labels < bg_class_ind)
+            # do not perform bounding box regression for BG anymore.
+            if pos_inds.any():
+                if self.reg_decoded_bbox:
+                    # When the regression loss (e.g. `IouLoss`,
+                    # `GIouLoss`, `DIouLoss`) is applied directly on
+                    # the decoded bounding boxes, it decodes the
+                    # already encoded coordinates to absolute format.
+                    bbox_pred = self.bbox_coder.decode(rois[:, 1:], bbox_pred)
+
+                if self.reg_class_agnostic:
+                    pos_bbox_pred = bbox_pred.view(
+                        bbox_pred.size(0), 4)[pos_inds.type(torch.bool)]
+                else:
+                    pos_bbox_pred = bbox_pred.view(
+                        bbox_pred.size(0), -1,
+                        4)[pos_inds.type(torch.bool),
+                           labels[pos_inds.type(torch.bool)]]
+                if self.reg_decoded_bbox:
+                    iou_target = bbox_overlaps(
+                        pos_bbox_pred.detach(), bbox_targets[pos_inds.type(torch.bool)], is_aligned=True)
+                else:
+                    bbox_decode_pred = self.bbox_coder.decode(rois[pos_inds.type(torch.bool), 1:], pos_bbox_pred)
+                    bbox_decode_targets = self.bbox_coder.decode(rois[pos_inds.type(torch.bool), 1:], bbox_targets[pos_inds.type(torch.bool)])
+                    iou_target = bbox_overlaps(
+                        bbox_decode_pred.detach(), bbox_decode_targets, is_aligned=True)
+                if self.focal_reg:
+                    bbox_weights = bbox_weights[pos_inds.type(torch.bool)] * iou_target[pos_inds.type(torch.bool),None] ** self.gamma
+                    losses['loss_bbox'] = self.loss_bbox(
+                        pos_bbox_pred,
+                        bbox_targets[pos_inds.type(torch.bool)],
+                        bbox_weights.clamp(min=1e-12),
+                        avg_factor=iou_target[pos_inds.type(torch.bool)].sum(),
+                        reduction_override=reduction_override)
+                else:
+                    losses['loss_bbox'] = self.loss_bbox(
+                        pos_bbox_pred,
+                        bbox_targets[pos_inds.type(torch.bool)],
+                        bbox_weights[pos_inds.type(torch.bool)],
+                        avg_factor=bbox_targets.size(0),
+                        reduction_override=reduction_override)
+            else:
+                losses['loss_bbox'] = bbox_pred[pos_inds].sum()
+        if cls_score is not None:
+            avg_factor = max(torch.sum(label_weights > 0).float().item(), 1.)
+            if cls_score.numel() > 0:
+                if isinstance(self.loss_cls, QualityFocalLoss):
+                    quality = label_weights.new_zeros(labels.shape)
+                    quality[pos_inds] = iou_target
+                    loss_cls_ = self.loss_cls(
+                        cls_score,
+                        (labels, quality),
+                        label_weights,
+                        avg_factor=avg_factor,
+                        reduction_override=reduction_override)
+                else:
+                    loss_cls_ = self.loss_cls(
+                        cls_score,
+                        labels,
+                        label_weights,
+                        avg_factor=avg_factor,
+                        reduction_override=reduction_override)
+                if isinstance(loss_cls_, dict):
+                    losses.update(loss_cls_)
+                else:
+                    losses['loss_cls'] = loss_cls_
+                if self.custom_activation:
+                    acc_ = self.loss_cls.get_accuracy(cls_score, labels)
+                    losses.update(acc_)
+                else:
+                    losses['acc'] = accuracy(cls_score, labels)
+
+        return losses
+
+    @force_fp32(apply_to=('bbox_preds', ))
+    def refine_bboxes(self, rois, labels, bbox_preds, pos_is_gts, img_metas, priors=None):
+        img_ids = rois[:, 0].long().unique(sorted=True)
+        assert img_ids.numel() <= len(img_metas)
+
+        bboxes_list = []
+        for i in range(len(img_metas)):
+            inds = torch.nonzero(
+                rois[:, 0] == i, as_tuple=False).squeeze(dim=1)
+            num_rois = inds.numel()
+
+            bboxes_ = rois[inds, 1:]
+            label_ = labels[inds]
+            bbox_pred_ = bbox_preds[inds]
+            img_meta_ = img_metas[i]
+            pos_is_gts_ = pos_is_gts[i]
+
+            bboxes = self.regress_by_class(bboxes_, label_, bbox_pred_,
+                                           img_meta_)
+            if priors is not None:
+                prior = priors[inds].unsqueeze(1)
+                bboxes = torch.cat((bboxes, prior), dim=1)
+
+
+            # filter gt bboxes
+            pos_keep = 1 - pos_is_gts_
+            keep_inds = pos_is_gts_.new_ones(num_rois)
+            keep_inds[:len(pos_is_gts_)] = pos_keep
+
+            bboxes_list.append(bboxes[keep_inds.type(torch.bool)])
+
+        return bboxes_list
