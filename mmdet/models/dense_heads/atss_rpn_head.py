@@ -107,7 +107,7 @@ class DCNModule(nn.Module):
 
 
 @HEADS.register_module()
-class RetinaRPNHead(RPNHead):
+class ATSSRPNHead(RPNHead):
     def __init__(self,
                  *args,
                  stacked_convs=4,
@@ -134,7 +134,7 @@ class RetinaRPNHead(RPNHead):
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
         self.last_conv = last_conv
-        super(RetinaRPNHead, self).__init__(*args, init_cfg=init_cfg, **kwargs)
+        super(ATSSRPNHead, self).__init__(*args, init_cfg=init_cfg, **kwargs)
         self.loss_centerness = build_loss(loss_centerness)
         self.gamma = gamma
         self.atss = atss

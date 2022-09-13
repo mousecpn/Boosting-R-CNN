@@ -35,10 +35,8 @@ from .yolact_head import YOLACTHead, YOLACTProtonet, YOLACTSegmHead
 from .yolo_head import YOLOV3Head
 from .yolof_head import YOLOFHead
 from .yolox_head import YOLOXHead
-from .paa_rpn_head import PAARPNHead
-from .cascade_paa_head import CascadePAAHead,StageCascadePAAHead
 from .cascade_head import StageCascadeDenseHead
-from .Retina_rpn_head import RetinaRPNHead
+from .atss_rpn_head import ATSSRPNHead
 __all__ = [
     'AnchorFreeHead', 'AnchorHead', 'GuidedAnchorHead', 'FeatureAdaption',
     'RPNHead', 'GARPNHead', 'RetinaHead', 'RetinaSepBNHead', 'GARetinaHead',
@@ -50,6 +48,5 @@ __all__ = [
     'CascadeRPNHead', 'EmbeddingRPNHead', 'LDHead', 'CascadeRPNHead',
     'AutoAssignHead', 'DETRHead', 'YOLOFHead', 'DeformableDETRHead',
     'SOLOHead', 'DecoupledSOLOHead', 'CenterNetHead', 'YOLOXHead',
-    'DecoupledSOLOLightHead','PAARPNHead','CascadePAAHead','StageCascadePAAHead','StageCascadeDenseHead',
-    'CascadeATSSRPNHead', 'ATSSRPNHead', 'RetinaRPN', 'GFLRPNHead'
+    'DecoupledSOLOLightHead', 'ATSSRPNHead'
 ]
