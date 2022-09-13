@@ -14,7 +14,7 @@ Complicated underwater environments bring new challenges to object detection, su
 - Python==3.7.6
 - PyTorch==1.7
 - mmdetection==2.17.0
-- mmcv==1.3.8
+- mmcv==1.4.0
 - numpy==1.16.3
 
 ## Installation
