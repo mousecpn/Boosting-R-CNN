@@ -189,7 +189,7 @@ class ATSSRPNHead(RPNHead):
                         padding=1,
                         conv_cfg=self.conv_cfg,
                         norm_cfg=self.norm_cfg))
-            self.rpn_convs.append(CBAM(self.feat_channels))
+            # self.rpn_convs.append(CBAM(self.feat_channels))
             # self.rpn_convs.append(Mish())
 
         self.rpn_cls = nn.Conv2d(
