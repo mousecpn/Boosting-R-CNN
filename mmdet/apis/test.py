@@ -13,17 +13,31 @@ from mmcv.runner import get_dist_info
 
 from mmdet.core import encode_mask_results
 
-
 def single_gpu_test(model,
                     data_loader,
                     show=False,
                     out_dir=None,
                     show_score_thr=0.3):
     model.eval()
+    # name_list = ['002806.jpg','002828.jpg','002928.jpg','002979.jpg','002432.jpg','002513.jpg','006211.jpg']
+    # name_list = ['001472.jpg','001074.jpg','004051.jpg','001278.jpg','001712.jpg','006476.jpg']
+
     results = []
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
-    for i, data in enumerate(data_loader):
+    for k, data in enumerate(data_loader):
+        img_metas = data['img_metas'][0].data[0]
+        name = img_metas[0]['ori_filename']
+        # if name not in name_list:
+        #     prog_bar.update()
+        #     continue
+        flag=0
+        try:
+            flag=1
+            gt_bboxes = data.pop('gt_bboxes') # list[tensor[batch,num_gt,4]]
+            gt_labels = data.pop('gt_labels')
+        except:
+            pass
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
 
@@ -49,12 +63,100 @@ def single_gpu_test(model,
                 else:
                     out_file = None
 
-                model.module.show_result(
-                    img_show,
-                    result[i],
-                    show=show,
-                    out_file=out_file,
-                    score_thr=show_score_thr)
+                #################################################
+                matched_results = []
+                unmatched_results = []
+                undetected_gts = []
+                if flag == 1:
+                    # result list[num_classes, array(num_pred, 5)]
+                    num_gts = gt_bboxes[i].shape[1]
+                    scores = np.concatenate(result[i], axis=0)[:,-1]
+                    try:
+                        score_thr = np.sort(scores)[max(scores.shape[0]-num_gts,0)] - 1e-6
+                    except:
+                        score_thr=1.0
+                    # score_thr = max(score_thr,0.05)
+                    for j in range(len(result[i])):
+                        gt_bboxes_j = gt_bboxes[i][gt_labels[i]==j]
+                        gt_bboxes_j[:,::2] *= (img_meta['ori_shape'][1]/img_meta['img_shape'][1])
+                        gt_bboxes_j[:,1::2] *= (img_meta['ori_shape'][0]/img_meta['img_shape'][0])
+                        if gt_bboxes_j.shape[0] == 0:
+                            matched_results.append(torch.zeros(0,5))
+                            unmatched_results.append(torch.from_numpy(result[i][j]))
+                            undetected_gts.append(torch.zeros(0,4))
+                            continue
+                        elif result[i][j].shape[0] == 0:
+                            matched_results.append(torch.zeros(0, 5))
+                            unmatched_results.append(torch.zeros(0, 5))
+                            undetected_gts.append(gt_bboxes_j)
+                            continue
+                        ious = bbox_overlaps(torch.from_numpy(result[i][j][:,:-1]), gt_bboxes_j) # num_pred, num_gts
+                        max_gt_ious, index = torch.max(ious,dim=0)
+                        max_ious, inds = torch.max(ious,dim=1)
+                        mask = torch.zeros(result[i][j].shape[0]).bool()
+                        mask[index] = True
+                        mask[max_ious<0.5] = False
+                        matched_results.append(torch.from_numpy(result[i][j])[mask])
+                        unmatched_results.append(torch.from_numpy(result[i][j])[~mask])
+                        undetected_gts.append(gt_bboxes_j[max_gt_ious<0.5])
+                    if img_meta['ori_shape'][1] > 3000:
+                        thickness = 20
+                        font_size = 40
+                    elif img_meta['ori_shape'][1] > 1900:
+                        thickness = 10
+                        font_size = 20
+                    else:
+                        thickness = 7
+                        font_size = 15
+
+                    # img_show = model.module.show_result(
+                    #     img_show,
+                    #     matched_results,
+                    #     bbox_color=(255, 255, 255),
+                    #     text_color=(255, 255, 255),
+                    #     thickness=5,
+                    #     font_size=13,
+                    #     show=False,
+                    #     out_file=None,
+                    #     score_thr=0.0)
+                    img_show = model.module.show_result(
+                        img_show,
+                        matched_results,
+                        bbox_color=(72, 101, 241),
+                        text_color=(72, 101, 241),
+                        thickness=thickness,
+                        font_size=font_size,
+                        show=False,
+                        out_file=None,
+                        score_thr=score_thr)
+                    img_show = model.module.show_result(
+                        img_show,
+                        unmatched_results,
+                        bbox_color=(255, 0, 0),
+                        text_color=(255, 255, 255),
+                        thickness=thickness,
+                        font_size=font_size,
+                        show=False,
+                        out_file=None,
+                        score_thr=score_thr)
+                    model.module.show_result(
+                        img_show,
+                        undetected_gts,
+                        bbox_color=(0, 0, 255),
+                        text_color=(0, 0, 255),
+                        thickness=thickness,
+                        font_size=font_size,
+                        show=show,
+                        out_file=out_file,
+                        score_thr=0.0)
+                #################################################
+                else:
+                    model.module.show_result(
+                        img_show,
+                        result[i],
+                        show=show,
+                        out_file=out_file,
+                        score_thr=show_score_thr)
 
         # encode mask results
         if isinstance(result[0], tuple):
@@ -65,6 +167,59 @@ def single_gpu_test(model,
         for _ in range(batch_size):
             prog_bar.update()
     return results
+
+
+# def single_gpu_test(model,
+#                     data_loader,
+#                     show=False,
+#                     out_dir=None,
+#                     show_score_thr=0.3):
+#     model.eval()
+#     results = []
+#     dataset = data_loader.dataset
+#     prog_bar = mmcv.ProgressBar(len(dataset))
+#     for i, data in enumerate(data_loader):
+#         with torch.no_grad():
+#             result = model(return_loss=False, rescale=True, **data)
+
+#         batch_size = len(result)
+#         if show or out_dir:
+#             if batch_size == 1 and isinstance(data['img'][0], torch.Tensor):
+#                 img_tensor = data['img'][0]
+#             else:
+#                 img_tensor = data['img'][0].data[0]
+#             img_metas = data['img_metas'][0].data[0]
+#             imgs = tensor2imgs(img_tensor, **img_metas[0]['img_norm_cfg'])
+#             assert len(imgs) == len(img_metas)
+
+#             for i, (img, img_meta) in enumerate(zip(imgs, img_metas)):
+#                 h, w, _ = img_meta['img_shape']
+#                 img_show = img[:h, :w, :]
+
+#                 ori_h, ori_w = img_meta['ori_shape'][:-1]
+#                 img_show = mmcv.imresize(img_show, (ori_w, ori_h))
+
+#                 if out_dir:
+#                     out_file = osp.join(out_dir, img_meta['ori_filename'])
+#                 else:
+#                     out_file = None
+
+#                 model.module.show_result(
+#                     img_show,
+#                     result[i],
+#                     show=show,
+#                     out_file=out_file,
+#                     score_thr=show_score_thr)
+
+#         # encode mask results
+#         if isinstance(result[0], tuple):
+#             result = [(bbox_results, encode_mask_results(mask_results))
+#                       for bbox_results, mask_results in result]
+#         results.extend(result)
+
+#         for _ in range(batch_size):
+#             prog_bar.update()
+#     return results
 
 
 def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
