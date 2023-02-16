@@ -47,6 +47,8 @@ Boosting-R-CNN-Reweighting-R-CNN-Samples-by-RPN-s-Error-for-Underwater-Object-De
 
 **PASCAL VOC**: http://host.robots.ox.ac.uk/pascal/VOC/
 
+Other underwater datasets: https://github.com/mousecpn/Collection-of-Underwater-Object-Detection-Dataset
+
 ## Train
 
 **UTDAC2020**
@@ -96,3 +98,16 @@ $ python tools/test.py configs/boosting_rcnn/boosting_rcnn_r50_pafpn_1x_utdac.py
 ## Acknowledgement
 
 Thanks MMDetection team for the wonderful open source project!
+
+## Citation
+
+```
+@article{song2023boosting,
+  title={Boosting R-CNN: Reweighting R-CNN Samples by RPN’s Error for Underwater Object Detection},
+  author={Song, Pinhao and Li, Pengteng and Dai, Linhui and Wang, Tao and Chen, Zhan},
+  journal={Neurocomputing},
+  year={2023},
+  publisher={Elsevier}
+}
+```
+
