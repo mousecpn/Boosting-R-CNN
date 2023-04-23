@@ -103,9 +103,11 @@ Thanks MMDetection team for the wonderful open source project!
 
 ```
 @article{song2023boosting,
-  title={Boosting R-CNN: Reweighting R-CNN Samples by RPN’s Error for Underwater Object Detection},
+  title={Boosting R-CNN: Reweighting R-CNN samples by RPN’s error for underwater object detection},
   author={Song, Pinhao and Li, Pengteng and Dai, Linhui and Wang, Tao and Chen, Zhan},
   journal={Neurocomputing},
+  volume={530},
+  pages={150--164},
   year={2023},
   publisher={Elsevier}
 }
