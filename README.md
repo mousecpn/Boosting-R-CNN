@@ -113,3 +113,11 @@ Thanks MMDetection team for the wonderful open source project!
 }
 ```
 
+## Recommendation
+
+Some of our works also use UTDAC2020 dataset. They will be listed as follows for you to comparison.
+
+Excavating RoI Attention for Underwater Object Detection: https://github.com/zsyasd/Excavating-RoI-Attention-for-Underwater-Object-Detection#excavating-roi-attention-for-underwater-object-detection
+
+Edge-guided Representation Learning for Underwater Object Detection: https://github.com/Ixiaohuihuihui/ERL-Net-for-Underwater-Object-Detection
+
