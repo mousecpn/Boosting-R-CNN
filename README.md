@@ -115,9 +115,11 @@ Thanks MMDetection team for the wonderful open source project!
 
 ## Recommendation
 
-Some of our works also use UTDAC2020 dataset. They will be listed as follows for you to comparison.
+Some of our works also use UTDAC2020 dataset. They will be listed as follows for you to compare.
 
 Excavating RoI Attention for Underwater Object Detection: https://github.com/zsyasd/Excavating-RoI-Attention-for-Underwater-Object-Detection#excavating-roi-attention-for-underwater-object-detection
 
 Edge-guided Representation Learning for Underwater Object Detection: https://github.com/Ixiaohuihuihui/ERL-Net-for-Underwater-Object-Detection
+
+Bagging R-CNN extends the idea of this paper to traffic detection: https://ieeexplore.ieee.org/abstract/document/10097085?casa_token=kYgm1LZFtqMAAAAA:KdYiSVVWgKYE5IrAOCdCF5rO6io7IA8fDLyV3vaPT82YL6yVE8OYTnBpT3Vvn8eaJvyKLc4zCw4
 
