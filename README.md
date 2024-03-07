@@ -96,11 +96,12 @@ $ python tools/test.py configs/boosting_rcnn/boosting_rcnn_r50_pafpn_1x_utdac.py
 
 ## Visualization
 
-If you want to reimplement the visualization as above, you need to change the config file first. Adding the key "gt_bboxes" in "collect" of test_pipeline.
+If you want to reimplement the visualization as above, you need to change the config file first. Adding "LoadAnnotations", and adding the key "gt_bboxes" in "collect", as:
 
 ```
 test_pipeline = [
     dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations', with_bbox=True),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1333, 800),
