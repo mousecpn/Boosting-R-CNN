@@ -19,7 +19,7 @@ Complicated underwater environments bring new challenges to object detection, su
 
 ## Installation
 
-The basic installation follows with [mmdetection](https://github.com/mousecpn/mmdetection/blob/master/docs/get_started.md). It is recommended to use manual installation. 
+The basic installation follows with [mmdetection](https://github.com/mousecpn/mmdetection/blob/master/docs/get_started.md). It is recommended to install locally. 
 
 ## Datasets
 
@@ -90,10 +90,33 @@ $ python tools/test.py configs/boosting_rcnn/boosting_rcnn_r50_pafpn_1x_utdac.py
 
 <img width="565" alt="image" src="https://user-images.githubusercontent.com/46233799/191498896-2285fd70-c385-43e4-a0db-992f45d7d0c8.png">
 
-
-![qualitative results](https://user-images.githubusercontent.com/46233799/175853981-828f55f8-d868-4524-ab8a-cc24ab92ec05.png)
+![qualitative results](https://github.com/mousecpn/Boosting-R-CNN/assets/46233799/087795b3-f830-4b22-b1d2-5ab1a9ce5458)
 
 ![video 00_00_00-00_00_30](https://user-images.githubusercontent.com/46233799/175854144-e61280e7-9c06-4d59-b739-3e4974121dbb.gif)
+
+## Visualization
+
+If you want to reimplement the visualization as above, you need to change the config file first. Adding the key "gt_bboxes" in "collect" of test_pipeline.
+
+```
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(1333, 800),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(type='Normalize', **img_norm_cfg),
+            dict(type='Pad', size_divisor=32),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img', 'gt_bboxes']),
+        ])
+]
+```
+
+And then adding "--show" or "--show-dir" argument when calling test.py, you will get the detection visualization.
 
 ## Acknowledgement
 
