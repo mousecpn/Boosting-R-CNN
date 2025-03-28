@@ -147,3 +147,5 @@ Edge-guided Representation Learning for Underwater Object Detection: https://git
 
 Bagging R-CNN extends the idea of this paper to traffic detection: https://ieeexplore.ieee.org/abstract/document/10097085?casa_token=kYgm1LZFtqMAAAAA:KdYiSVVWgKYE5IrAOCdCF5rO6io7IA8fDLyV3vaPT82YL6yVE8OYTnBpT3Vvn8eaJvyKLc4zCw4
 
+My master thesis: ([Robust Object Detection of Underwater Robot based on Domain Generalization](https://arxiv.org/pdf/2503.19929))
+
